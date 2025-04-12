@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: FileDownloadHub
+logging:
+  pattern:
+    console: "%date{yyyy-MM-dd HH:mm:ss.SSS} traceId:%X{traceId} [%thread] %highlight(%-5level) %logger{36} - %message%n"
+  level:
+    io.github: debug

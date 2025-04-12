@@ -18,6 +18,12 @@ public class HeaderUtils {
 
     private static final Pattern RANGE_PATTERN = Pattern.compile("^bytes=\\d+(-\\d*)?$");
 
+    /**
+     * 解析Range请求头
+     *
+     * @param request 请求体
+     * @return RangeHeader
+     */
     public static RangeHeader getRangeHeader(HttpServletRequest request) {
         String range = request.getHeader(HttpHeaders.RANGE);
         if (!StringUtils.hasText(range)) {
