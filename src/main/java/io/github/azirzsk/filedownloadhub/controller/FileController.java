@@ -2,6 +2,8 @@ package io.github.azirzsk.filedownloadhub.controller;
 
 import io.github.azirzsk.filedownloadhub.entity.FileItem;
 import io.github.azirzsk.filedownloadhub.service.FileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +28,15 @@ public class FileController {
 
     @GetMapping("/list")
     @ResponseBody
+    @Operation(summary = "文件列表",
+            parameters = @Parameter(name = "path", description = "文件路径"))
     public List<? extends FileItem> list(@RequestParam(defaultValue = "") String path) {
         return fileService.list(path);
     }
 
     @GetMapping("/download")
+    @Operation(summary = "文件下载",
+            parameters = @Parameter(name = "path", description = "文件路径"))
     public void download(@RequestParam String path, HttpServletRequest request, HttpServletResponse response) {
         fileService.download(path, request, response);
     }

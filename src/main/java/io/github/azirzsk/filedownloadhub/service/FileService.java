@@ -1,9 +1,9 @@
 package io.github.azirzsk.filedownloadhub.service;
 
-import io.github.azirzsk.filedownloadhub.DownloadException;
 import io.github.azirzsk.filedownloadhub.entity.FileItem;
 import io.github.azirzsk.filedownloadhub.entity.Folder;
 import io.github.azirzsk.filedownloadhub.entity.RangeHeader;
+import io.github.azirzsk.filedownloadhub.exception.DownloadException;
 import io.github.azirzsk.filedownloadhub.properties.FileProperties;
 import io.github.azirzsk.filedownloadhub.utils.HeaderUtils;
 import jakarta.servlet.ServletOutputStream;

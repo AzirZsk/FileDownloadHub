@@ -1,7 +1,7 @@
 package io.github.azirzsk.filedownloadhub.utils;
 
-import io.github.azirzsk.filedownloadhub.DownloadException;
 import io.github.azirzsk.filedownloadhub.entity.RangeHeader;
+import io.github.azirzsk.filedownloadhub.exception.DownloadException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

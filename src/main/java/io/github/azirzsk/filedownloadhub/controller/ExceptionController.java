@@ -1,6 +1,6 @@
 package io.github.azirzsk.filedownloadhub.controller;
 
-import io.github.azirzsk.filedownloadhub.DownloadException;
+import io.github.azirzsk.filedownloadhub.exception.DownloadException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

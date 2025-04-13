@@ -1,4 +1,4 @@
-package io.github.azirzsk.filedownloadhub;
+package io.github.azirzsk.filedownloadhub.exception;
 
 /**
  * @author azir
