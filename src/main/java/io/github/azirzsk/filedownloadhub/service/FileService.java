@@ -1,5 +1,6 @@
 package io.github.azirzsk.filedownloadhub.service;
 
+import io.github.azirzsk.filedownloadhub.DownloadException;
 import io.github.azirzsk.filedownloadhub.entity.FileItem;
 import io.github.azirzsk.filedownloadhub.entity.Folder;
 import io.github.azirzsk.filedownloadhub.entity.RangeHeader;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,16 +47,36 @@ public class FileService {
     public List<? extends FileItem> list(String path) {
         String basePath = fileProperties.getBasePath();
         File file = new File(basePath + path);
-        return Arrays.stream(file.listFiles())
-                .map(v -> {
-                    Folder folder = Folder.builder()
-                            .name(v.getName())
-                            .path(v.getPath())
-                            .lastModified(v.lastModified())
-                            .build();
-                    return folder;
-                }).toList();
+        File[] files = file.listFiles();
+        if (files == null) {
+            log.info("该路径下没有东西");
+            return Collections.emptyList();
+        }
+        return Arrays.stream(files)
+                .map(fileItem -> {
+                    // 文件夹
+                    if (fileItem.isDirectory()) {
+                        return Folder.builder()
+                                .name(fileItem.getName())
+                                .path(getPath(fileItem.getPath()))
+                                .lastModified(fileItem.lastModified())
+                                .build();
+                    } else if (fileItem.isFile()) {
+                        return io.github.azirzsk.filedownloadhub.entity.File.builder()
+                                .name(fileItem.getName())
+                                .path(getPath(fileItem.getPath()))
+                                .lastModified(fileItem.lastModified())
+                                .size(fileItem.length())
+                                .build();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
 
+    private String getPath(String path) {
+        return path.replace(fileProperties.getBasePath(), "").replace(File.separator, "/");
     }
 
     /**
@@ -67,6 +89,7 @@ public class FileService {
     public void download(String path, HttpServletRequest request, HttpServletResponse response) {
         log.info("download-start,path:{}", path);
         File file = new File(fileProperties.getBasePath() + path);
+        checkFile(file);
         setDownloadHeader(file, response);
         RangeHeader rangeHeader = HeaderUtils.getRangeHeader(request);
         if (rangeHeader != null) {
@@ -78,6 +101,17 @@ public class FileService {
             log.info("download-end");
         } catch (IOException e) {
             log.warn("download-error:{}", e.getMessage());
+        }
+    }
+
+    private void checkFile(File file) {
+        if (!file.exists()) {
+            log.warn("要下载的文件不存在:{}", file.getPath());
+            throw new DownloadException("要下载的文件不存在");
+        }
+        if (file.isDirectory()) {
+            log.warn("要下载的文件是文件夹");
+            throw new DownloadException("要下载的文件是文件夹");
         }
     }
 
@@ -117,9 +151,9 @@ public class FileService {
                 downloadSize += curReadSize;
             }
             log.info("范围下载完成");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.warn("范围下载失败：{}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new DownloadException("范围下载失败" + e.getMessage(), e);
         }
     }
 

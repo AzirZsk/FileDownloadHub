@@ -1,5 +1,6 @@
 package io.github.azirzsk.filedownloadhub.utils;
 
+import io.github.azirzsk.filedownloadhub.DownloadException;
 import io.github.azirzsk.filedownloadhub.entity.RangeHeader;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class HeaderUtils {
         Matcher matcher = RANGE_PATTERN.matcher(range);
         if (!matcher.matches()) {
             log.warn("无效的range请求头");
-            throw new IllegalArgumentException("Invalid range header: " + range);
+            throw new DownloadException("Invalid range header: " + range);
         }
         String realRange = range.substring(6);
         String[] splitRange = realRange.split("-");
@@ -42,7 +43,7 @@ public class HeaderUtils {
             long end = Long.parseLong(splitRange[1]);
             if (start > end) {
                 log.warn("读取的字节不合法：{}", range);
-                throw new IllegalArgumentException("Invalid range header: " + range);
+                throw new DownloadException("Invalid range header: " + range);
             }
             res.setStart(start);
             res.setEnd(end);
