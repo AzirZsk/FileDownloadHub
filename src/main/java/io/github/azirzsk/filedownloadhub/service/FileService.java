@@ -167,9 +167,9 @@ public class FileService {
     private long calcRangeDownloadContentLength(File file, RangeHeader rangeHeader) {
         long contentLength;
         if (rangeHeader.getEnd() == null) {
-            contentLength = file.length() - rangeHeader.getStart();
+            contentLength = (file.length() - 1) - rangeHeader.getStart() + 1;
         } else {
-            contentLength = rangeHeader.getEnd() - rangeHeader.getStart();
+            contentLength = rangeHeader.getEnd() - rangeHeader.getStart() + 1;
         }
         return contentLength;
     }
