@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>文件下载中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(106,17,203,0.3);
+            border-radius: 50%;
+            border-top-color: #6a11cb;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1600px;
+            padding: 20px;
+            margin-top: 2rem;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: none;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        #searchBtn {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        #searchBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .file-item:hover {
+            background-color: #f0f5ff;
+            cursor: pointer;
+            transform: translateX(5px);
+            transition: all 0.3s ease;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table th {
+            border-top: none;
+            border-right: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+        .table td {
+            border-right: 1px solid #dee2e6;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        .table th:last-child,
+        .table td:last-child {
+            border-right: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3">
+        <h1 class="mb-4">文件下载中心</h1>
+        
+        <div class="input-group mb-3">
+            <input class="form-control" id="pathInput" placeholder="输入路径" type="text">
+            <button class="btn btn-primary" id="searchBtn">搜索</button>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                文件列表
+            </div>
+            <div class="card-body">
+                <table class="table table-hover table-responsive" id="fileTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%">文件名</th>
+                            <th style="width: 15%">类型</th>
+                            <th style="width: 15%">大小</th>
+                            <th style="width: 20%">修改时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileList">
+                        <!-- 文件列表将通过JS动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 加载文件列表
+            loadFileList('');
+            
+            // 搜索按钮点击事件
+            $('#searchBtn').click(function() {
+                const path = $('#pathInput').val();
+                loadFileList(path);
+            });
+            
+            // 回车键触发搜索
+            $('#pathInput').keypress(function(e) {
+                if (e.which === 13) {
+                    $('#searchBtn').click();
+                }
+            });
+        });
+        
+        function loadFileList(path) {
+            $.ajax({
+                url: '/file/list',
+                type: 'GET',
+                data: { path: path },
+                success: function(data) {
+                    renderFileList(data);
+                },
+                error: function(xhr, status, error) {
+                    alert('获取文件列表失败: ' + error);
+                }
+            });
+        }
+        
+        function renderFileList(files) {
+            const $fileList = $('#fileList');
+            $fileList.empty();
+            
+            // 添加返回上一级目录的固定行
+            const currentPath = $('#pathInput').val();
+            if (currentPath && currentPath !== '') {
+                const $parentRow = $('<tr class="file-item"></tr>');
+                $parentRow.append('<td colspan="4">..</td>');
+                
+                $parentRow.click(function() {
+                    const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                    $('#pathInput').val(parentPath);
+                    loadFileList(parentPath);
+                });
+                
+                $fileList.append($parentRow);
+            }
+            
+            if (files.length === 0) {
+                $fileList.append('<tr><td colspan="4" class="text-center">没有找到文件</td></tr>');
+                return;
+            }
+            
+            files.forEach(function(file) {
+                const $row = $('<tr class="file-item"></tr>');
+                $row.append(`<td>${file.name}</td>`);
+                $row.append(`<td>${file.type}</td>`);
+                $row.append(`<td>${file.type === 'folder' ? '-' : formatFileSize(file.size)}</td>`);
+                $row.append(`<td>${new Date(file.lastModified).toLocaleString()}</td>`);
+                
+                // 点击行处理
+                $row.click(function() {
+                    if (file.type === 'folder') {
+                        $('#pathInput').val(file.path);
+                        loadFileList(file.path);
+                    } else {
+                        downloadFile(file.path);
+                    }
+                });
+                
+                $fileList.append($row);
+            });
+        }
+        
+        function downloadFile(path) {
+            window.location.href = `/file/download?path=${encodeURIComponent(path)}`;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
