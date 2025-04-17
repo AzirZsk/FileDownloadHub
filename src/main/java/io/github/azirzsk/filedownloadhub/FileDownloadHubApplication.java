@@ -15,6 +15,7 @@ public class FileDownloadHubApplication {
         ConfigurableApplicationContext applicationContext = SpringApplication.run(FileDownloadHubApplication.class, args);
         FileProperties fileProperties = applicationContext.getBean(FileProperties.class);
         log.info("基础路径为：{}", fileProperties.getBasePath());
+        log.info("文件下载服务启动成功，地址：{}", "http://localhost:%s/".formatted(applicationContext.getEnvironment().getProperty("server.port")));
     }
 
 }
